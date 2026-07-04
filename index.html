@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rubric Builder — ScoreSync</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f0ede8;
+      --surface: #faf9f7;
+      --card: #ffffff;
+      --text: #1a1814;
+      --text-2: #6b6560;
+      --text-3: #9e9890;
+      --border: rgba(26,24,20,0.10);
+      --border-strong: rgba(26,24,20,0.18);
+      --accent: #c84b2f;
+      --accent-light: #fdf1ee;
+      --green: #02a246;
+      --green-dark: #028a3b;
+      --green-light: #e0f5ea;
+      --green-mid: #c8ecd6;
+      --green-text: #017a34;
+      --blue: #1a5276;
+      --blue-light: #eaf0f6;
+      --r: 14px;
+      --r-sm: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.10);
+    }
+    html.dark {
+      --bg: #111210; --surface: #1c1c1a; --card: #242422;
+      --text: #f0ede8; --text-2: #a09b94; --text-3: #6b6560;
+      --border: rgba(240,237,232,0.10); --border-strong: rgba(240,237,232,0.18);
+      --accent-light: #2d1a14; --blue-light: #0f1f2e;
+      --shadow: 0 1px 3px rgba(0,0,0,0.30), 0 4px 16px rgba(0,0,0,0.25);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.50);
+    }
+    html.dark .brand-bar { background: #1c1c1a; border-bottom-color: rgba(240,237,232,0.08); }
+    html.dark .section-head { background: #1a2e20; border-bottom-color: rgba(2,162,70,0.2); }
+    html.dark .section-name-input { color: #4ade80; }
+    html.dark .section-name-input::placeholder { color: rgba(74,222,128,0.3); }
+    html.dark .section-pts-badge { color: #4ade80; }
+    html.dark .sort-btn { background: rgba(74,222,128,0.08); border-color: rgba(74,222,128,0.2); color: #4ade80; }
+    html.dark .sort-btn:hover:not(:disabled) { background: rgba(74,222,128,0.15); }
+    html.dark .crit-card { background: var(--surface); }
+    html.dark .level-item { background: var(--card); }
+    html.dark .level-item.mode-range { border-color: rgba(26,92,118,0.35); background: #0f1f2e; }
+    html.dark input, html.dark textarea, html.dark select { background: var(--card); color: var(--text); border-color: var(--border-strong); }
+    html.dark input::placeholder, html.dark textarea::placeholder { color: var(--text-3); }
+    html.dark .btn-ghost { background: transparent; border-color: var(--border-strong); color: var(--text-2); }
+    html.dark .btn-ghost:hover { background: var(--surface); color: var(--text); }
+    html.dark .output-panel { background: var(--card); }
+    html.dark .output-head { background: var(--surface); }
+    html.dark pre { color: #4ade80; background: #0a1f10; }
+    html.dark .add-level-btn { border-color: rgba(2,162,70,0.3); color: var(--text-3); }
+    html.dark .add-level-btn:hover { background: #0d2e1a; color: #4ade80; border-color: rgba(2,162,70,0.5); }
+    html.dark .add-crit-btn { border-color: rgba(2,162,70,0.25); color: var(--text-3); }
+    html.dark .add-crit-btn:hover { background: #0d2e1a; color: #4ade80; border-color: rgba(2,162,70,0.4); }
+    html.dark .add-section-btn { background: #0d2e1a; border-color: rgba(2,162,70,0.3); color: #4ade80; }
+    html.dark .add-section-btn:hover { background: #1a3d22; }
+    html.dark .meta-card { background: var(--card); }
+    html.dark .score-type-pill { background: var(--surface); border-color: var(--border-strong); color: var(--text-2); }
+    html.dark .score-type-pill.active-abs { background: #1a2e20; border-color: rgba(2,162,70,0.4); color: #4ade80; }
+    html.dark .score-type-pill.active-range { background: #0f1f2e; border-color: rgba(26,92,118,0.4); color: #7db8d8; }
+    html.dark .range-preview-pill { background: #1a2e20; border-color: rgba(2,162,70,0.25); color: #4ade80; }
+    html.dark .range-preview-pill.range-type { background: #0f1f2e; border-color: rgba(26,92,118,0.3); color: #7db8d8; }
+    html.dark .conflict-banner { background: #2d1a14; border-color: rgba(200,75,47,0.3); color: #f4a89a; }
+    html.dark .dark-toggle-track { background: rgba(240,237,232,0.15); }
+    html.dark .dark-toggle-track.on { background: var(--green); }
+    html.dark .mode-badge-abs { background: #1a2e20; color: #4ade80; border-color: rgba(2,162,70,0.25); }
+    html.dark .mode-badge-range { background: #0f1f2e; color: #7db8d8; border-color: rgba(26,92,118,0.25); }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; font-size: 15px; line-height: 1.5;
+      padding-top: 44px;
+    }
+
+    /* BRAND BAR */
+    .brand-bar {
+      position: fixed; top: 0; left: 0; right: 0; height: 44px;
+      background: #fff; display: flex; align-items: center;
+      justify-content: space-between; padding: 0 18px;
+      z-index: 200; border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+    .brand-bar-left { display: flex; align-items: center; gap: 12px; }
+    .brand-bar img { height: 28px; width: auto; display: block; }
+    .brand-bar-sep { width: 1px; height: 18px; background: rgba(0,0,0,0.12); }
+    .brand-bar-page { font-size: 13px; font-weight: 600; color: var(--text-2); letter-spacing: -0.01em; }
+    .brand-bar-stats { display: flex; align-items: center; }
+    .brand-stat { display: flex; align-items: baseline; gap: 4px; padding: 0 10px; }
+    .brand-stat-val { font-size: 13px; font-weight: 700; color: var(--text); font-family: 'DM Sans', sans-serif; }
+    .brand-stat-label { font-size: 11px; color: var(--text-3); font-weight: 400; }
+    .brand-stat-sep { width: 1px; height: 14px; background: rgba(0,0,0,0.10); flex-shrink: 0; }
+    html.dark .brand-stat-sep { background: rgba(255,255,255,0.10); }
+    .brand-bar-right { display: flex; align-items: center; gap: 8px; }
+
+    /* DARK TOGGLE */
+    .dark-toggle { display: flex; align-items: center; gap: 6px; background: none; border: none; cursor: pointer; padding: 0; }
+    .dark-toggle-icon { font-size: 13px; line-height: 1; opacity: 0.5; transition: opacity 0.2s; }
+    .dark-toggle-icon.active { opacity: 1; }
+    .dark-toggle-track { width: 36px; height: 20px; border-radius: 999px; background: rgba(0,0,0,0.12); border: 1px solid rgba(0,0,0,0.10); position: relative; transition: background 0.25s; flex-shrink: 0; }
+    .dark-toggle-track.on { background: var(--green); border-color: transparent; }
+    .dark-toggle-thumb { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: transform 0.25s cubic-bezier(0.34,1.4,0.64,1); }
+    .dark-toggle-track.on .dark-toggle-thumb { transform: translateX(16px); }
+
+    /* LAYOUT — single column, full width */
+    .layout { display: block; padding: 20px; max-width: 1400px; margin: 0 auto; min-height: calc(100vh - 44px); }
+    .builder-col { display: flex; flex-direction: column; gap: 14px; }
+
+    /* META CARD */
+    .meta-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--shadow); padding: 20px 22px; }
+    .meta-card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); margin-bottom: 16px; }
+    .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .meta-grid .full { grid-column: 1 / -1; }
+
+    label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-3); display: block; margin-bottom: 5px; }
+
+    input[type=text], input[type=number], textarea, select {
+      width: 100%; border: 1px solid var(--border-strong); border-radius: var(--r-sm);
+      padding: 9px 11px; font-size: 13px; font-family: 'DM Sans', sans-serif;
+      background: var(--surface); color: var(--text); outline: none;
+      transition: border-color 0.12s, box-shadow 0.12s;
+    }
+    input[type=text]:focus, input[type=number]:focus, textarea:focus, select:focus {
+      border-color: var(--green); box-shadow: 0 0 0 3px rgba(2,162,70,0.12);
+    }
+    input[type=number] { -moz-appearance: textfield; }
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+    textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
+
+
+    /* SECTION CARD */
+    .section-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden; }
+    .section-head { display: flex; align-items: center; gap: 10px; padding: 11px 16px; background: var(--green-mid); border-bottom: 1px solid rgba(2,162,70,0.25); }
+    .section-head-num { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(1,122,52,0.6); flex-shrink: 0; }
+    .section-name-input { flex: 1; background: transparent; border: none; outline: none; font-size: 14px; font-weight: 600; color: var(--green-text); font-family: 'DM Sans', sans-serif; padding: 0; min-width: 0; }
+    .section-name-input::placeholder { color: rgba(1,122,52,0.35); font-weight: 400; }
+    .section-pts-badge { font-size: 12px; font-weight: 700; color: var(--green-text); white-space: nowrap; flex-shrink: 0; }
+    .section-controls { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+    .sort-btn { width: 26px; height: 26px; border-radius: 6px; border: 1px solid rgba(1,122,52,0.2); background: rgba(255,255,255,0.5); color: var(--green-text); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: background 0.1s; padding: 0; }
+    .sort-btn:hover:not(:disabled) { background: #fff; }
+    .sort-btn:disabled { opacity: 0.3; cursor: default; }
+    .section-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+    /* CRITERION CARD */
+    .crit-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 16px; }
+    .crit-top { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; margin-bottom: 12px; }
+    .crit-fields { display: grid; grid-template-columns: 1fr 80px; gap: 10px; }
+
+    .levels-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .levels-head-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-3); }
+    /* LEVELS TRAY — horizontal scrolling row of cards */
+    .levels-grid {
+      display: flex; flex-direction: row; gap: 8px;
+      overflow-x: auto; padding-bottom: 4px;
+      scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent;
+    }
+    .levels-grid::-webkit-scrollbar { height: 4px; }
+    .levels-grid::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
+
+    /* LEVEL ITEM — fixed-width tile */
+    .level-item {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--r-sm); padding: 12px 10px 10px; position: relative;
+      flex: 0 0 200px; min-width: 200px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .level-item.mode-range { border-color: rgba(26,92,118,0.3); background: #f0f5fa; }
+
+
+    .level-del { position: absolute; top: 7px; right: 7px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border: none; background: none; cursor: pointer; color: var(--text-3); border-radius: 5px; font-size: 15px; line-height: 1; transition: color 0.12s, background 0.12s; }
+    .level-del:hover { color: var(--accent); background: var(--accent-light); }
+
+    /* SCORE TYPE TOGGLE — pill pair per level */
+    .score-type-toggle { display: flex; gap: 4px; margin-bottom: 10px; }
+    .score-type-pill {
+      flex: 1; padding: 5px 8px; font-size: 11px; font-weight: 700;
+      text-align: center; border-radius: 6px; cursor: pointer;
+      border: 1px solid var(--border-strong); background: var(--surface);
+      color: var(--text-3); transition: background 0.12s, color 0.12s, border-color 0.12s;
+      font-family: 'DM Sans', sans-serif; letter-spacing: 0.02em;
+    }
+    .score-type-pill.active-abs { background: var(--green-light); border-color: rgba(2,162,70,0.4); color: var(--green-text); }
+    .score-type-pill.active-range { background: var(--blue-light); border-color: rgba(26,92,118,0.3); color: var(--blue); }
+
+    /* RANGE FIELDS */
+    .range-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .range-sep { display: flex; align-items: flex-end; padding-bottom: 9px; font-size: 13px; color: var(--text-3); justify-content: center; }
+
+    /* RANGE PREVIEW PILLS (inside level card) */
+    .range-preview { margin-top: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .range-preview-pill {
+      font-size: 11px; font-weight: 700; padding: 3px 9px;
+      border-radius: 999px; border: 1px solid rgba(2,162,70,0.25);
+      background: var(--green-light); color: var(--green-text);
+      white-space: nowrap;
+    }
+    .range-preview-pill.range-type {
+      background: var(--blue-light); border-color: rgba(26,92,118,0.25); color: var(--blue);
+    }
+    .range-preview-label { font-size: 11px; color: var(--text-3); }
+
+    /* CONFLICT / WARNING BANNER */
+    .conflict-banner {
+      display: flex; align-items: start; gap: 8px; padding: 10px 12px;
+      background: var(--accent-light); border: 1px solid rgba(200,75,47,0.25);
+      border-radius: var(--r-sm); font-size: 12px; color: var(--accent);
+      margin-top: 8px; line-height: 1.45;
+    }
+    .conflict-banner-icon { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+
+    /* MODE BADGE in preview */
+    .mode-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; border: 1px solid; margin-left: 5px; vertical-align: middle; }
+    .mode-badge-abs { background: var(--green-light); color: var(--green-text); border-color: rgba(2,162,70,0.25); }
+    .mode-badge-range { background: var(--blue-light); color: var(--blue); border-color: rgba(26,92,118,0.25); }
+
+    /* BUTTONS */
+    .btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-strong); border-radius: var(--r-sm); padding: 9px 16px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; background: var(--card); color: var(--text); cursor: pointer; transition: background 0.12s, transform 0.08s; white-space: nowrap; letter-spacing: -0.01em; }
+    .btn:hover { background: var(--surface); }
+    .btn:active { transform: scale(0.97); }
+    .btn-green { background: var(--green); color: #fff; border-color: var(--green); }
+    .btn-green:hover { background: var(--green-dark); }
+    .btn-red { background: transparent; color: var(--accent); border-color: rgba(200,75,47,0.25); }
+    .btn-red:hover { background: var(--accent-light); border-color: rgba(200,75,47,0.4); }
+    .btn-ghost { background: transparent; border-color: var(--border-strong); color: var(--text-2); }
+    .btn-ghost:hover { background: var(--surface); color: var(--text); }
+    .btn-sm { padding: 6px 11px; font-size: 12px; }
+
+    .add-level-btn { width: 100%; padding: 8px; border: 1px dashed var(--border-strong); border-radius: var(--r-sm); background: transparent; font-size: 12px; color: var(--text-3); cursor: pointer; transition: background 0.12s, color 0.12s, border-color 0.12s; font-family: 'DM Sans', sans-serif; display: flex; align-items: center; justify-content: center; gap: 5px; }
+    .add-level-btn:hover { background: var(--green-light); color: var(--green); border-color: rgba(2,162,70,0.4); }
+
+    .add-crit-btn { width: 100%; padding: 10px; border: 1px dashed var(--border-strong); border-radius: var(--r-sm); background: transparent; font-size: 13px; color: var(--text-3); cursor: pointer; transition: background 0.12s, color 0.12s, border-color 0.12s; font-family: 'DM Sans', sans-serif; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .add-crit-btn:hover { background: var(--green-light); color: var(--green); border-color: rgba(2,162,70,0.4); }
+
+    .add-section-btn { width: 100%; padding: 13px; border: 1px dashed rgba(2,162,70,0.4); border-radius: var(--r); background: var(--green-light); font-size: 14px; color: var(--green); cursor: pointer; transition: background 0.12s; font-family: 'DM Sans', sans-serif; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 7px; }
+    .add-section-btn:hover { background: var(--green-mid); }
+
+    /* SIDEBAR CARDS */
+
+    /* STATS */
+    .stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-3); margin-bottom: 5px; }
+    .stat-value { font-size: 22px; font-weight: 600; color: var(--green); font-family: 'DM Sans', sans-serif; }
+
+    /* PREVIEW */
+
+    /* OUTPUT */
+    .output-panel { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden; }
+    .output-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); }
+    .output-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); flex: 1; }
+    pre { font-family: 'Courier New', Courier, monospace; font-size: 11px; padding: 16px; color: var(--text-2); max-height: 320px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.6; }
+    .action-row { display: flex; gap: 10px; flex-wrap: wrap; padding: 16px; border-top: 1px solid var(--border); background: var(--surface); }
+
+    /* TOAST */
+    .toast { position: fixed; bottom: 24px; right: 24px; background: #1a1814; color: #f0ede8; padding: 12px 18px; border-radius: 12px; font-size: 14px; font-weight: 500; box-shadow: var(--shadow-lg); transform: translateY(20px); opacity: 0; pointer-events: none; transition: transform 0.25s ease, opacity 0.25s ease; z-index: 999; border: 1px solid rgba(255,255,255,0.08); }
+    html.dark .toast { background: #f0ede8; color: #1a1814; border-color: rgba(0,0,0,0.08); }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* TIMER BLOCK */
+    /* EMPTY STATE */
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 48px 20px 40px; text-align: center;
+    }
+    .empty-anim { margin-bottom: 24px; }
+    .empty-svg { width: 320px; max-width: 90vw; }
+    .empty-title {
+      font-size: 18px; font-weight: 600; letter-spacing: -0.02em;
+      color: var(--text); margin-bottom: 8px;
+    }
+    .empty-sub { font-size: 14px; color: var(--text-2); line-height: 1.6; }
+
+    /* Draw-in animations */
+    .anim-header {
+      transform-origin: left center;
+      animation: slideInLeft 0.5s cubic-bezier(0.34,1.3,0.64,1) both;
+    }
+    .anim-header-text {
+      animation: fadeIn 0.4s ease 0.45s both;
+    }
+    .anim-row { animation: fadeIn 0.35s ease both; }
+    .anim-row-1 { animation-delay: 0.55s; }
+    .anim-row-2 { animation-delay: 0.9s; }
+
+    .anim-card { animation: popIn 0.3s cubic-bezier(0.34,1.5,0.64,1) both; }
+    .anim-card-1 { animation-delay: 0.65s; }
+    .anim-card-2 { animation-delay: 0.72s; }
+    .anim-card-3 { animation-delay: 0.79s; }
+    .anim-card-4 { animation-delay: 0.86s; }
+    .anim-card-5 { animation-delay: 1.0s; }
+    .anim-card-6 { animation-delay: 1.07s; }
+    .anim-card-7 { animation-delay: 1.14s; }
+    .anim-card-8 { animation-delay: 1.21s; }
+
+    .anim-pencil {
+      animation: pencilDraw 0.6s cubic-bezier(0.34,1.2,0.64,1) 0.1s both;
+      transform-origin: 284px 26px;
+    }
+
+    @keyframes slideInLeft {
+      from { transform: scaleX(0); opacity: 0; }
+      to   { transform: scaleX(1); opacity: 1; }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.7); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    @keyframes pencilDraw {
+      from { transform: translate(30px, -30px) rotate(10deg); opacity: 0; }
+      to   { transform: translate(0,0) rotate(0deg); opacity: 1; }
+    }
+
+    html.dark .empty-svg rect[fill="#ffffff"] { fill: var(--card); }
+    html.dark .empty-svg rect[fill="#f4f6fb"] { fill: var(--surface); }
+    html.dark .empty-svg rect[fill="#e8edf8"] { fill: #1a2030; }
+    html.dark .empty-svg rect[fill="#ccd5e8"] { fill: #2a3555; }
+    html.dark .empty-svg line, html.dark .empty-svg polygon { stroke: var(--text-2); }
+    .import-zone {
+      border: 2px dashed var(--border-strong); border-radius: var(--r);
+      padding: 28px 20px; text-align: center; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      background: var(--surface);
+    }
+    .import-zone:hover, .import-zone.drag-over {
+      border-color: var(--green); background: var(--green-light);
+    }
+    .import-zone-icon { font-size: 28px; margin-bottom: 10px; color: var(--text-3); }
+    .import-zone-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .import-zone-sub { font-size: 12px; color: var(--text-3); line-height: 1.5; }
+    html.dark .import-zone { background: var(--surface); border-color: var(--border-strong); }
+    html.dark .import-zone:hover, html.dark .import-zone.drag-over { background: #0d2e1a; border-color: rgba(2,162,70,0.5); }
+
+    /* IMPORT MODAL */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 400;
+      background: rgba(26,24,20,0.45); align-items: center; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--r);
+      box-shadow: var(--shadow-lg); padding: 28px; width: 480px; max-width: 94vw;
+    }
+    html.dark .modal-box { background: var(--card); }
+    .modal-title { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 6px; }
+    .modal-sub { font-size: 13px; color: var(--text-2); margin-bottom: 20px; line-height: 1.5; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+
+    /* RESPONSIVE */
+    @media (max-width: 600px) { .layout { padding: 12px; } .meta-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<div class="brand-bar">
+  <div class="brand-bar-left">
+    <img src="https://images.squarespace-cdn.com/content/58c9b3222994ca906352a9dc/e223ff59-a637-4e95-b5ac-a1009728c08c/scoresync.lock4.png?content-type=image%2Fpng" alt="ScoreSync" />
+    <div class="brand-bar-sep"></div>
+    <span class="brand-bar-page">Rubric Builder</span>
+    <div class="brand-bar-sep"></div>
+    <div class="brand-bar-stats">
+      <div class="brand-stat"><span class="brand-stat-val" id="statTotal">0</span><span class="brand-stat-label">pts</span></div>
+      <div class="brand-stat-sep"></div>
+      <div class="brand-stat"><span class="brand-stat-val" id="statSections">0</span><span class="brand-stat-label">sections</span></div>
+      <div class="brand-stat-sep"></div>
+      <div class="brand-stat"><span class="brand-stat-val" id="statCriteria">0</span><span class="brand-stat-label">criteria</span></div>
+      <div class="brand-stat-sep"></div>
+      <div class="brand-stat"><span class="brand-stat-val" id="statTimer" style="color:var(--text-3)">—</span><span class="brand-stat-label">time limit</span></div>
+    </div>
+  </div>
+  <div class="brand-bar-right">
+    <button class="btn btn-sm btn-ghost" onclick="resetBuilder()">↺ Reset</button>
+    <button class="btn btn-sm btn-ghost" onclick="triggerImport()" title="Load a previously saved rubric .txt file">⬆ Import rubric</button>
+    <input type="file" id="importFile" accept=".txt" style="display:none" onchange="handleImport(event)" />
+    <button class="btn btn-sm btn-green" onclick="downloadCode()">⬇ Save rubric</button>
+    <button class="btn btn-sm" onclick="exportPDF()" title="Print or save as PDF">⬇ Save As PDF</button>
+    <button class="dark-toggle" id="darkToggle" aria-label="Toggle dark mode">
+      <span class="dark-toggle-icon active" id="sunIcon">☀️</span>
+      <div class="dark-toggle-track" id="toggleTrack"><div class="dark-toggle-thumb"></div></div>
+      <span class="dark-toggle-icon" id="moonIcon">🌙</span>
+    </button>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="builder-col">
+
+    <div class="meta-card">
+      <div style="display:flex;gap:12px;align-items:end">
+        <div style="flex:1;min-width:0">
+          <label for="eventTitle">Event title</label>
+          <input type="text" id="eventTitle" placeholder="e.g. Breakout Session Presentation" oninput="refreshStats()" />
+        </div>
+        <div style="flex:0 0 120px">
+          <label for="timeLimitInput">Time limit</label>
+          <input type="text" id="timeLimitInput" placeholder="e.g. 40 min" oninput="parseTimeLimitInput(this.value)" style="text-align:center" />
+        </div>
+      </div>
+    </div>
+
+    <div id="sectionsContainer"></div>
+
+    <button class="add-section-btn" onclick="addSection()">+ Add section</button>
+
+  </div>
+
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal-box">
+    <div class="modal-title">Import rubric</div>
+    <div class="modal-sub">Paste the exported rubric code below, or drag and drop a <code style="font-size:11px;background:var(--surface);padding:1px 5px;border-radius:4px;border:1px solid var(--border)">.js</code> file onto this window. This will replace the current rubric.</div>
+    <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);display:block;margin-bottom:6px">Rubric code</label>
+    <textarea id="importTextarea" style="width:100%;height:180px;font-family:monospace;font-size:12px;resize:vertical;border:1px solid var(--border-strong);border-radius:var(--r-sm);padding:10px;background:var(--surface);color:var(--text);outline:none" placeholder="Paste exported rubric code here…"></textarea>
+    <div id="importError" style="display:none;margin-top:8px;font-size:12px;color:var(--accent);padding:8px 10px;background:var(--accent-light);border-radius:6px;border:1px solid rgba(200,75,47,0.2)"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeImportModal()">Cancel</button>
+      <button class="btn btn-green" onclick="parseAndImport()">⬆ Import</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  let sections = [];
+  let nextId = 1;
+  function uid() { return 'x' + (nextId++); }
+
+  /* ── TIMER STATE ── */
+  let timerMins = 0, timerSecs = 0;
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  // Parse a free-text time entry like "40 min", "1:30", "90", "1h 30m"
+  function parseTimeLimitInput(raw) {
+    const s = (raw || '').trim().toLowerCase();
+    if (!s) { timerMins = 0; timerSecs = 0; updateTimerStat(); return; }
+
+    // formats: "mm:ss", "h:mm:ss"
+    const colonMatch = s.match(/^(\d+):(\d{1,2})(?::(\d{1,2}))?$/);
+    if (colonMatch) {
+      if (colonMatch[3] !== undefined) {
+        // h:mm:ss
+        timerMins = parseInt(colonMatch[1]) * 60 + parseInt(colonMatch[2]);
+        timerSecs = parseInt(colonMatch[3]);
+      } else {
+        timerMins = parseInt(colonMatch[1]);
+        timerSecs = parseInt(colonMatch[2]);
+      }
+      timerSecs = Math.min(59, timerSecs);
+      updateTimerStat(); return;
+    }
+
+    // formats: "40 min", "1h 30m", "90s", "90 seconds", "30", etc.
+    let mins = 0, secs = 0;
+    const hMatch  = s.match(/(\d+)\s*h/);
+    const mMatch  = s.match(/(\d+)\s*m(?:in)?/);
+    const sMatch  = s.match(/(\d+)\s*s(?:ec)?/);
+    if (hMatch || mMatch || sMatch) {
+      if (hMatch) mins += parseInt(hMatch[1]) * 60;
+      if (mMatch) mins += parseInt(mMatch[1]);
+      if (sMatch) secs  = Math.min(59, parseInt(sMatch[1]));
+    } else {
+      // plain number → treat as minutes
+      const n = parseInt(s);
+      if (!isNaN(n)) mins = n;
+    }
+    timerMins = mins; timerSecs = secs;
+    updateTimerStat();
+  }
+
+  function updateTimerStat() {
+    const total = timerMins * 60 + timerSecs;
+    const stat = $('statTimer');
+    if (!stat) return;
+    if (total === 0) {
+      stat.textContent = '—'; stat.style.color = 'var(--text-3)';
+    } else {
+      const parts = [];
+      if (timerMins > 0) parts.push(timerMins + ' min');
+      if (timerSecs > 0) parts.push(timerSecs + ' sec');
+      stat.textContent = parts.join(' '); stat.style.color = 'var(--green)';
+    }
+  }
+
+  // Stub — called from import path; sync text field and stat after import sets timerMins/timerSecs
+  function updateTimerUI() {
+    const total = timerMins * 60 + timerSecs;
+    const inp = $('timeLimitInput');
+    if (inp) {
+      if (total === 0) { inp.value = ''; }
+      else {
+        const parts = [];
+        if (timerMins > 0) parts.push(timerMins + ' min');
+        if (timerSecs > 0) parts.push(timerSecs + ' sec');
+        inp.value = parts.join(' ');
+      }
+    }
+    updateTimerStat();
+  }
+
+  function getTimerSeconds() { return timerMins * 60 + timerSecs; }
+
+  /* ── DATA ── */
+
+  // mode: 'absolute' = fixed pts value; 'range' = min..max band
+  function makeLevel(label, pts, text, mode, min) {
+    return {
+      id: uid(),
+      label: label || '',
+      pts: pts || 0,
+      min: (mode === 'range') ? (min !== undefined ? min : Math.max(0, pts - 2)) : pts,
+      text: text || '',
+      mode: mode || 'absolute'
+    };
+  }
+
+  function makeCrit(name, desc, max, levels) {
+    return {
+      id: uid(),
+      name: name || '',
+      description: desc || '',
+      max: max || 10,
+      levels: levels || [
+        makeLevel('Accomplished', 10, 'Exceeds expectations consistently.', 'range', 9),
+        makeLevel('Proficient', 8, 'Meets expectations effectively.', 'range', 6),
+        makeLevel('Developing', 5, 'Partially meets expectations.', 'range', 3),
+        makeLevel('Beginning', 2, 'Little evidence of the skill.', 'absolute')
+      ]
+    };
+  }
+
+  function makeSection(name, criteria) {
+    return { id: uid(), name: name || '', criteria: criteria || [makeCrit()] };
+  }
+
+  function sectionMax(sec) {
+    return sec.criteria.reduce((s, c) => s + (Number(c.max) || 0), 0);
+  }
+
+  function totalMax() { return sections.reduce((s, sec) => s + sectionMax(sec), 0); }
+  function totalCritCount() { return sections.reduce((s, sec) => s + sec.criteria.length, 0); }
+
+  /* ── VALIDATION ── */
+
+  // Returns a list of warning strings for a criterion's levels
+  function validateLevels(crit) {
+    const warnings = [];
+    const sorted = [...crit.levels].sort((a, b) => b.pts - a.pts);
+
+    sorted.forEach((lv, i) => {
+      if (lv.mode === 'range') {
+        if (lv.min > lv.pts) warnings.push(`"${lv.label || 'Level'}": min (${lv.min}) is greater than max (${lv.pts}).`);
+        if (lv.min < 0) warnings.push(`"${lv.label || 'Level'}": min cannot be negative.`);
+        // Check overlap with next lower level
+        if (i < sorted.length - 1) {
+          const next = sorted[i + 1];
+          const nextMax = next.pts;
+          if (lv.min <= nextMax) warnings.push(`"${lv.label}" range (${lv.min}–${lv.pts}) overlaps with "${next.label}" (${next.mode === 'range' ? next.min + '–' : ''}${next.pts}).`);
+        }
+      }
+    });
+
+    // Check duplicate point values
+    const pts = crit.levels.map(l => l.pts);
+    const dupes = pts.filter((p, i) => pts.indexOf(p) !== i);
+    if (dupes.length) warnings.push(`Duplicate point value(s): ${[...new Set(dupes)].join(', ')}.`);
+
+    return warnings;
+  }
+
+  /* ── INIT ── */
+
+  function initDefault() {
+    $('eventTitle').value = '';
+    $('timeLimitInput').value = '';
+    timerMins = 0; timerSecs = 0;
+    updateTimerStat();
+    sections = [];
+    renderAll();
+  }
+
+  function resetBuilder() {
+    if (!confirm('Clear the rubric? All current content will be removed.')) return;
+    initDefault();
+    showToast('Rubric cleared.');
+  }
+
+
+  /* ── MUTATIONS ── */
+
+  function addSection() {
+    sections.push(makeSection());
+    renderAll();
+    setTimeout(() => {
+      const els = document.querySelectorAll('.section-card');
+      if (els.length) els[els.length - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  }
+
+  function removeSection(sid) {
+    if (sections.length <= 1) { showToast('At least one section is required.'); return; }
+    if (!confirm('Remove this section and all its criteria?')) return;
+    sections = sections.filter(s => s.id !== sid);
+    renderAll();
+  }
+
+  function moveSec(sid, dir) {
+    const i = sections.findIndex(s => s.id === sid);
+    const j = i + dir;
+    if (j < 0 || j >= sections.length) return;
+    [sections[i], sections[j]] = [sections[j], sections[i]];
+    renderAll();
+  }
+
+  function addCrit(sid) {
+    const s = sections.find(s => s.id === sid);
+    if (s) { s.criteria.push(makeCrit()); renderAll(); }
+  }
+
+  function removeCrit(sid, cid) {
+    const s = sections.find(s => s.id === sid);
+    if (!s) return;
+    if (s.criteria.length <= 1) { showToast('Each section needs at least one criterion.'); return; }
+    s.criteria = s.criteria.filter(c => c.id !== cid);
+    renderAll();
+  }
+
+  function addLevel(sid, cid) {
+    const s = sections.find(s => s.id === sid);
+    const c = s && s.criteria.find(c => c.id === cid);
+    if (!c) return;
+    const maxPts = c.levels.length ? Math.max(...c.levels.map(l => Number(l.pts) || 0)) : 0;
+    const newPts = Math.max(0, maxPts - 2);
+    c.levels.push(makeLevel('New Level', newPts, 'Describe this performance level.', 'range', Math.max(0, newPts - 2)));
+    renderAll();
+  }
+
+  function removeLevel(sid, cid, lid) {
+    const s = sections.find(s => s.id === sid);
+    const c = s && s.criteria.find(c => c.id === cid);
+    if (!c) return;
+    if (c.levels.length <= 1) { showToast('Each criterion needs at least one level.'); return; }
+    c.levels = c.levels.filter(l => l.id !== lid);
+    renderAll();
+  }
+
+  function setLevelMode(sid, cid, lid, mode) {
+    const s = sections.find(s => s.id === sid);
+    const c = s && s.criteria.find(c => c.id === cid);
+    const l = c && c.levels.find(l => l.id === lid);
+    if (!l) return;
+    l.mode = mode;
+    if (mode === 'absolute') l.min = l.pts;
+    else l.min = Math.max(0, l.pts - 2);
+    renderAll();
+  }
+
+
+
+  /* ── SYNC ── */
+
+  function syncSection(sid, field, value) {
+    const s = sections.find(s => s.id === sid);
+    if (s) s[field] = value;
+    refreshStats(); refreshPreview();
+  }
+
+  function syncCrit(sid, cid, field, value) {
+    const s = sections.find(s => s.id === sid);
+    const c = s && s.criteria.find(c => c.id === cid);
+    if (c) c[field] = field === 'max' ? (Number(value) || 0) : value;
+    refreshStats(); refreshPreview();
+    const badge = document.querySelector(`[data-sec-pts="${sid}"]`);
+    if (badge) badge.textContent = sectionMax(s) + ' pts';
+  }
+
+  function syncLevel(sid, cid, lid, field, value) {
+    const s = sections.find(s => s.id === sid);
+    const c = s && s.criteria.find(c => c.id === cid);
+    const l = c && c.levels.find(l => l.id === lid);
+    if (!l) return;
+    const numFields = ['pts', 'min'];
+    l[field] = numFields.includes(field) ? (Number(value) || 0) : value;
+    // Keep absolute in sync
+    if (field === 'pts' && l.mode === 'absolute') l.min = l.pts;
+    refreshStats(); refreshPreview();
+    // Update the inline range preview without full re-render
+    const previewEl = document.getElementById(`rp-${lid}`);
+    if (previewEl) previewEl.textContent = lvRangeLabel(l);
+  }
+
+  function lvRangeLabel(lv) {
+    if (lv.mode === 'absolute') return `${lv.pts} pts`;
+    return `${lv.min}–${lv.pts} pts`;
+  }
+
+  /* ── RENDER ── */
+
+  function renderAll() {
+    const container = $('sectionsContainer');
+    if (!sections.length) {
+      container.innerHTML = `
+        <div class="empty-state" id="emptyState">
+          <div class="empty-anim">
+            <svg viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg" class="empty-svg" aria-hidden="true">
+              <!-- Rubric sheet shadow -->
+              <rect x="24" y="18" width="272" height="184" rx="8" fill="rgba(0,48,135,0.07)"/>
+              <!-- Rubric sheet -->
+              <rect x="20" y="14" width="272" height="184" rx="8" fill="#ffffff" stroke="#e0e6f0" stroke-width="1.5"/>
+              <!-- Header bar -->
+              <rect x="20" y="14" width="272" height="28" rx="8" fill="#003087" class="anim-header"/>
+              <rect x="20" y="32" width="272" height="10" fill="#003087" class="anim-header"/>
+              <!-- Header text lines (white) -->
+              <rect x="34" y="22" width="90" height="6" rx="3" fill="rgba(255,255,255,0.7)" class="anim-header-text"/>
+              <rect x="34" y="31" width="50" height="4" rx="2" fill="rgba(255,255,255,0.4)" class="anim-header-text"/>
+
+              <!-- Section 1 row -->
+              <rect x="32" y="54" width="256" height="14" rx="3" fill="#e8edf8" class="anim-row anim-row-1"/>
+              <rect x="32" y="54" width="110" height="14" rx="3" fill="#ccd5e8" class="anim-row anim-row-1"/>
+              <!-- Level cards row 1 -->
+              <rect x="32"  y="74" width="56" height="30" rx="4" fill="#f4f6fb" stroke="#ccd5e8" stroke-width="1" class="anim-card anim-card-1"/>
+              <rect x="96"  y="74" width="56" height="30" rx="4" fill="#f4f6fb" stroke="#ccd5e8" stroke-width="1" class="anim-card anim-card-2"/>
+              <rect x="160" y="74" width="56" height="30" rx="4" fill="#f4f6fb" stroke="#ccd5e8" stroke-width="1" class="anim-card anim-card-3"/>
+              <rect x="224" y="74" width="64" height="30" rx="4" fill="#f4f6fb" stroke="#ccd5e8" stroke-width="1" class="anim-card anim-card-4"/>
+              <!-- Card text lines -->
+              <rect x="38"  y="80" width="36" height="4" rx="2" fill="#003087" class="anim-card anim-card-1"/>
+              <rect x="38"  y="88" width="28" height="3" rx="1.5" fill="#cc0000" class="anim-card anim-card-1"/>
+              <rect x="102" y="80" width="36" height="4" rx="2" fill="#003087" class="anim-card anim-card-2"/>
+              <rect x="102" y="88" width="28" height="3" rx="1.5" fill="#cc0000" class="anim-card anim-card-2"/>
+              <rect x="166" y="80" width="36" height="4" rx="2" fill="#003087" class="anim-card anim-card-3"/>
+              <rect x="166" y="88" width="28" height="3" rx="1.5" fill="#cc0000" class="anim-card anim-card-3"/>
+              <rect x="230" y="80" width="42" height="4" rx="2" fill="#003087" class="anim-card anim-card-4"/>
+              <rect x="230" y="88" width="32" height="3" rx="1.5" fill="#cc0000" class="anim-card anim-card-4"/>
+
+              <!-- Section 2 row -->
+              <rect x="32" y="116" width="256" height="14" rx="3" fill="#e8edf8" class="anim-row anim-row-2"/>
+              <rect x="32" y="116" width="140" height="14" rx="3" fill="#ccd5e8" class="anim-row anim-row-2"/>
+              <!-- Level cards row 2 -->
+              <rect x="32"  y="136" width="56" height="30" rx="4" fill="#f4f6fb" stroke="#ccd5e8" stroke-width="1" class="anim-card anim-card-5"/>
+              <rect x="96"  y="136" width="56" height="30" rx="4" fill="#f4f6fb" stroke="#ccd5e8" stroke-width="1" class="anim-card anim-card-6"/>
+              <rect x="160" y="136" width="56" height="30" rx="4" fill="#f4f6fb" stroke="#ccd5e8" stroke-width="1" class="anim-card anim-card-7"/>
+              <rect x="224" y="136" width="64" height="30" rx="4" fill="#f4f6fb" stroke="#ccd5e8" stroke-width="1" class="anim-card anim-card-8"/>
+              <rect x="38"  y="142" width="36" height="4" rx="2" fill="#003087" class="anim-card anim-card-5"/>
+              <rect x="38"  y="150" width="28" height="3" rx="1.5" fill="#cc0000" class="anim-card anim-card-5"/>
+              <rect x="102" y="142" width="36" height="4" rx="2" fill="#003087" class="anim-card anim-card-6"/>
+              <rect x="102" y="150" width="28" height="3" rx="1.5" fill="#cc0000" class="anim-card anim-card-6"/>
+              <rect x="166" y="142" width="36" height="4" rx="2" fill="#003087" class="anim-card anim-card-7"/>
+              <rect x="166" y="150" width="28" height="3" rx="1.5" fill="#cc0000" class="anim-card anim-card-7"/>
+              <rect x="230" y="142" width="42" height="4" rx="2" fill="#003087" class="anim-card anim-card-8"/>
+              <rect x="230" y="150" width="32" height="3" rx="1.5" fill="#cc0000" class="anim-card anim-card-8"/>
+
+              <!-- Pencil (animated, drawing in from right) -->
+              <g class="anim-pencil">
+                <line x1="252" y1="58" x2="284" y2="26" stroke="#1a1814" stroke-width="2.5" stroke-linecap="round"/>
+                <polygon points="252,58 248,70 260,66" fill="#cc0000"/>
+                <rect x="265" y="19" width="12" height="16" rx="2" transform="rotate(-45 271 27)" fill="#f5c842"/>
+                <rect x="267" y="17" width="12" height="6" rx="1" transform="rotate(-45 273 20)" fill="#e8a020"/>
+              </g>
+            </svg>
+          </div>
+          <div class="empty-title">Your rubric is empty</div>
+          <div class="empty-sub">Click <strong>+ Add section</strong> below to start building,<br>or <strong>⬆ Import rubric</strong> to load a saved file.</div>
+        </div>`;
+    } else {
+      container.innerHTML = sections.map((sec, si) => renderSection(sec, si)).join('');
+    }
+    refreshStats();
+    refreshPreview();
+  }
+
+  function refreshAll() { renderAll(); }
+
+  function renderSection(sec, si) {
+    const isFirst = si === 0, isLast = si === sections.length - 1;
+    return `
+    <div class="section-card" id="sec-${sec.id}">
+      <div class="section-head">
+        <span class="section-head-num">§${si + 1}</span>
+        <input class="section-name-input" placeholder="Section name…" value="${esc(sec.name)}" oninput="syncSection('${sec.id}','name',this.value)" />
+        <span class="section-pts-badge" data-sec-pts="${sec.id}">${sectionMax(sec)} pts</span>
+        <div class="section-controls">
+          <button class="sort-btn" onclick="moveSec('${sec.id}',-1)" title="Move up" ${isFirst ? 'disabled' : ''}>▲</button>
+          <button class="sort-btn" onclick="moveSec('${sec.id}',1)" title="Move down" ${isLast ? 'disabled' : ''}>▼</button>
+          <button class="btn btn-sm btn-red" onclick="removeSection('${sec.id}')">✕ Remove</button>
+        </div>
+      </div>
+      <div class="section-body">
+        ${sec.criteria.map(crit => renderCrit(sec, crit)).join('')}
+        <button class="add-crit-btn" onclick="addCrit('${sec.id}')">+ Add criterion</button>
+      </div>
+    </div>`;
+  }
+
+  function renderCrit(sec, crit) {
+    const warnings = validateLevels(crit);
+    const warningHtml = warnings.length ? `
+      <div class="conflict-banner">
+        <span class="conflict-banner-icon">⚠</span>
+        <div>${warnings.map(w => `<div>${w}</div>`).join('')}</div>
+      </div>` : '';
+    return `
+    <div class="crit-card" id="crit-${crit.id}">
+      <div class="crit-top">
+        <div class="crit-fields">
+          <div>
+            <label>Criterion name</label>
+            <input type="text" placeholder="e.g. Delivery" value="${esc(crit.name)}" oninput="syncCrit('${sec.id}','${crit.id}','name',this.value)" />
+          </div>
+          <div>
+            <label>Max pts</label>
+            <input type="number" min="0" max="9999" value="${crit.max}" oninput="syncCrit('${sec.id}','${crit.id}','max',this.value)" />
+          </div>
+        </div>
+        <button class="btn btn-sm btn-red" onclick="removeCrit('${sec.id}','${crit.id}')" style="margin-top:18px">✕</button>
+      </div>
+      <div style="margin-bottom:12px">
+        <label>Description</label>
+        <textarea placeholder="Describe what this criterion measures…" oninput="syncCrit('${sec.id}','${crit.id}','description',this.value)">${esc(crit.description)}</textarea>
+      </div>
+      ${warningHtml}
+      ${renderLevels(sec, crit)}
+    </div>`;
+  }
+
+  function renderLevels(sec, crit) {
+    const order = 'asc'; // always low to high
+    const sorted = order === 'desc'
+      ? [...crit.levels].sort((a, b) => b.pts - a.pts)
+      : [...crit.levels].sort((a, b) => a.pts - b.pts);
+    return `
+    <div class="levels-head" style="margin-top:4px">
+      <span class="levels-head-label">Performance levels</span>
+      <button class="btn btn-sm btn-ghost" onclick="addLevel('${sec.id}','${crit.id}')">+ Add level</button>
+    </div>
+    <div class="levels-grid">
+      ${sorted.map(lv => renderLevel(sec, crit, lv)).join('')}
+    </div>`;
+  }
+
+  function renderLevel(sec, crit, lv) {
+    const isRange = lv.mode === 'range';
+    const rangeFields = isRange ? `
+      <div style="margin-top:8px">
+        <label>Point range</label>
+        <div class="range-fields">
+          <div>
+            <label>Min</label>
+            <input type="number" min="0" value="${lv.min}" oninput="syncLevel('${sec.id}','${crit.id}','${lv.id}','min',this.value)" />
+          </div>
+          <div>
+            <label>Max</label>
+            <input type="number" min="0" value="${lv.pts}" oninput="syncLevel('${sec.id}','${crit.id}','${lv.id}','pts',this.value)" />
+          </div>
+        </div>
+      </div>` : `
+      <div style="margin-top:8px">
+        <label>Points (fixed)</label>
+        <input type="number" min="0" value="${lv.pts}" oninput="syncLevel('${sec.id}','${crit.id}','${lv.id}','pts',this.value)" />
+      </div>`;
+
+    return `
+    <div class="level-item${isRange ? ' mode-range' : ''}" id="lv-${lv.id}">
+      <button class="level-del" onclick="removeLevel('${sec.id}','${crit.id}','${lv.id}')" title="Remove level">✕</button>
+      <div class="score-type-toggle">
+        <button class="score-type-pill${!isRange ? ' active-abs' : ''}" onclick="setLevelMode('${sec.id}','${crit.id}','${lv.id}','absolute')">ABSOLUTE</button>
+        <button class="score-type-pill${isRange ? ' active-range' : ''}" onclick="setLevelMode('${sec.id}','${crit.id}','${lv.id}','range')">RANGE</button>
+      </div>
+      <div>
+        <label>Label</label>
+        <input type="text" value="${esc(lv.label)}" placeholder="e.g. Accomplished" oninput="syncLevel('${sec.id}','${crit.id}','${lv.id}','label',this.value)" />
+      </div>
+      ${rangeFields}
+      <div style="margin-top:8px">
+        <label>Descriptor</label>
+        <input type="text" value="${esc(lv.text)}" placeholder="Describe this level…" oninput="syncLevel('${sec.id}','${crit.id}','${lv.id}','text',this.value)" />
+      </div>
+      <div class="range-preview">
+        <span class="range-preview-label">Judge sees:</span>
+        <span class="range-preview-pill${isRange ? ' range-type' : ''}" id="rp-${lv.id}">${lvRangeLabel(lv)}</span>
+      </div>
+    </div>`;
+  }
+
+  /* ── STATS + PREVIEW ── */
+
+  function refreshStats() {
+    $('statTotal').textContent = totalMax();
+    $('statSections').textContent = sections.length;
+    $('statCriteria').textContent = totalCritCount();
+  }
+
+  function refreshPreview() { /* preview removed — stats live in brand bar */ }
+
+  /* ── CODE GENERATION ── */
+
+  function buildRubricArray() {
+    return sections.map(sec => ({
+      section: sec.name || 'Untitled section',
+      max: sectionMax(sec),
+      criteria: sec.criteria.map(crit => ({
+        name: crit.name || 'Untitled criterion',
+        description: crit.description || '',
+        max: crit.max,
+        levels: [...crit.levels]
+          .sort((a, b) => b.pts - a.pts)
+          .map(lv => ({
+            label: lv.label || 'Level',
+            points: lv.pts,
+            min: lv.mode === 'range' ? lv.min : lv.pts,
+            max: lv.pts,
+            mode: lv.mode,
+            text: lv.text || ''
+          }))
+      }))
+    }));
+  }
+
+  function buildCode() {
+    const title = $('eventTitle').value.trim() || 'Custom Event';
+    const obj = buildRubricArray();
+    const allWarnings = sections.flatMap(sec => sec.criteria.flatMap(c => validateLevels(c)));
+    const warningBlock = allWarnings.length
+      ? `// ⚠ Warnings:\n${allWarnings.map(w => `//   ${w}`).join('\n')}\n\n`
+      : '';
+    const timerTotalSec = getTimerSeconds();
+    const timerComment = timerTotalSec > 0
+      ? `// Timer: ${timerMins > 0 ? timerMins + 'm ' : ''}${timerSecs > 0 ? timerSecs + 's' : ''} (${timerTotalSec} seconds total)\n`
+      : `// Timer: none\n`;
+    const timerLine = timerTotalSec > 0
+      ? `\n// Auto-load this into ScoreSync's timer on rubric import\nconst eventTimer = { totalSeconds: ${timerTotalSec}, minutes: ${timerMins}, seconds: ${timerSecs} };`
+      : `\n// No time limit configured for this event\nconst eventTimer = null;`;
+    return `// Event: ${title}\n// Generated by ScoreSync Rubric Builder\n// Total: ${totalMax()} pts | ${sections.length} sections | ${totalCritCount()} criteria\n// Level modes: "absolute" = fixed score; "range" = min–max band (judge adjusts within range)\n${timerComment}\n${warningBlock}const rubric = ${JSON.stringify(obj, null, 2)};${timerLine}`;
+  }
+
+
+  function downloadCode() {
+    const title = $('eventTitle').value.trim() || 'Untitled Event';
+    const code = buildCode();
+    const dateStr = new Date().toLocaleDateString('en-US', { year:'numeric', month:'2-digit', day:'2-digit' }).replace(/\//g, '-');
+    const filename = title.replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '-') + '-' + dateStr + '.txt';
+    const blob = new Blob([code], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Saved as ' + filename);
+  }
+
+  /* ── UTILS ── */
+
+  function esc(s) {
+    return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function showToast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  /* ── IMPORT ── */
+
+  function triggerImport() {
+    // Open the file picker directly — no modal needed
+    $('importFile').click();
+  }
+
+  function closeImportModal() {
+    $('importModal').classList.remove('show');
+  }
+
+  function handleImport(evt) {
+    const file = evt.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const raw = e.target.result;
+      importFromText(raw, file.name);
+    };
+    reader.readAsText(file);
+    evt.target.value = ''; // reset so same file can be re-imported
+  }
+
+  // Core import logic — shared by file picker, drag-and-drop, and paste modal
+  function importFromText(raw, sourceName) {
+    raw = (raw || '').trim();
+    if (!raw) { showToast('File was empty — nothing imported.'); return; }
+
+    const rubricMatch = raw.match(/const\s+rubric\s*=\s*(\[[\s\S]*?\]);/);
+    if (!rubricMatch) {
+      showToast('No valid rubric found in ' + (sourceName || 'file') + '.');
+      return;
+    }
+
+    let parsed;
+    try { parsed = JSON.parse(rubricMatch[1]); }
+    catch(e) { showToast('Parse error: ' + e.message); return; }
+
+    if (!Array.isArray(parsed) || !parsed.length) {
+      showToast('Rubric appears to be empty — nothing imported.');
+      return;
+    }
+
+    // Event title
+    const titleMatch = raw.match(/\/\/\s*Event:\s*(.+)/);
+    if (titleMatch) $('eventTitle').value = titleMatch[1].trim();
+
+    // Timer
+    for (const line of raw.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith('const eventTimer')) continue;
+      if (trimmed.includes('null')) {
+        timerMins = 0; timerSecs = 0; updateTimerUI();
+      } else {
+        const minsMatch = trimmed.match(/minutes:\s*(\d+)/);
+        const secsMatch = trimmed.match(/seconds:\s*(\d+)/);
+        if (minsMatch || secsMatch) {
+          timerMins = minsMatch ? parseInt(minsMatch[1], 10) : 0;
+          timerSecs = secsMatch ? parseInt(secsMatch[1], 10) : 0;
+          updateTimerUI();
+        }
+      }
+      break;
+    }
+
+    // Rebuild sections
+    sections = parsed.map(sec => ({
+      id: uid(),
+      name: sec.section || '',
+      criteria: (sec.criteria || []).map(crit => ({
+        id: uid(),
+        name: crit.name || '',
+        description: crit.description || '',
+        max: crit.max || 0,
+        levels: (crit.levels || []).map(lv => ({
+          id: uid(),
+          label: lv.label || '',
+          pts: lv.max !== undefined ? lv.max : (lv.points || 0),
+          min: lv.min !== undefined ? lv.min : (lv.max !== undefined ? lv.max : (lv.points || 0)),
+          text: lv.text || '',
+          mode: lv.mode || (lv.min !== undefined && lv.min !== lv.max ? 'range' : 'absolute')
+        }))
+      }))
+    }));
+
+    closeImportModal();
+    renderAll();
+    showToast('Rubric imported' + (sourceName ? ' from ' + sourceName : '') + '.');
+  }
+
+  // Keep modal paste path working for power users who want to paste text manually
+  function parseAndImport() {
+    importFromText($('importTextarea').value, null);
+  }
+
+  // Drag-and-drop a .txt file anywhere on the page
+  document.addEventListener('dragover', e => { e.preventDefault(); });
+  document.addEventListener('drop', e => {
+    e.preventDefault();
+    const file = e.dataTransfer?.files?.[0];
+    if (!file || !file.name.endsWith('.txt')) return;
+    const reader = new FileReader();
+    reader.onload = ev => importFromText(ev.target.result, file.name);
+    reader.readAsText(file);
+  });
+
+  $('importModal').addEventListener('click', e => {
+    if (e.target === $('importModal')) closeImportModal();
+  });
+
+  /* ── PDF EXPORT ── */
+
+  const TAFE_LOGO_URL = 'https://www.tafeonline.org/assets/images/TAFELOGO2Round500.jpg';
+  let tafeLogoBase64 = null;
+
+  async function fetchLogoBase64(url) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const blob = await res.blob();
+      return await new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror  = () => resolve(null);
+        reader.readAsDataURL(blob);
+      });
+    } catch(e) { return null; }
+  }
+
+  // Estimate the printed height of a criterion in points (approximate).
+  // Used to decide when to start a new page.
+  // Measure real rendered heights of criteria using an off-screen container.
+  // Far more accurate than estimation — accounts for text wrapping, level count, etc.
+  function measureCritHeights(critHTMLs) {
+    const container = document.createElement('div');
+    container.style.cssText = [
+      'position:absolute','top:-9999px','left:-9999px',
+      'width:620px','font-family:DM Sans,sans-serif','font-size:8.5pt',
+      'line-height:1.35','color:#1a1814','visibility:hidden','pointer-events:none'
+    ].join(';');
+    container.innerHTML = `<style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      .pdf-crit{border:1px solid #ccd5e8;border-top:none;padding:7px 10px 6px}
+      .pdf-crit-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px}
+      .pdf-crit-name{font-size:8.5pt;font-weight:700}
+      .pdf-crit-max{font-size:7pt}
+      .pdf-crit-desc{font-size:7.5pt;margin-bottom:6px;line-height:1.35}
+      .pdf-levels{display:flex;gap:5px;flex-wrap:wrap}
+      .pdf-level{border:1px solid #ccd5e8;border-radius:4px;padding:4px 7px;min-width:90px;flex:1}
+      .pdf-level-label{font-size:7.5pt;font-weight:700;margin-bottom:1px}
+      .pdf-level-pts{font-size:7.5pt;font-weight:700;margin-bottom:2px}
+      .pdf-level-desc{font-size:7pt;line-height:1.3}
+    </style>` + critHTMLs.map((h, i) => `<div data-idx="${i}">${h}</div>`).join('');
+    document.body.appendChild(container);
+    const heights = critHTMLs.map((_, i) => {
+      const el = container.querySelector(`[data-idx="${i}"]`);
+      return el ? el.offsetHeight : 60;
+    });
+    document.body.removeChild(container);
+    return heights;
+  }
+
+  function buildPDFPages(logoSrc, title, timerLabel, now) {
+    // Heights in screen pixels at 96dpi. Letter page at 28px side padding:
+    // 11in * 96 = 1056px height. Subtract 56px top + 56px bottom padding = 944px.
+    const PX_BODY        = 900;
+    const PX_FULL_HEADER = 95;
+    const PX_MINI_HEADER = 34;
+    const PX_FOOTER      = 30;
+    const PX_SEC_HEADER  = 24;
+
+    const levelOrder = 'asc'; // always low to high
+
+    const miniHeaderHTML = `
+      <div class="pdf-mini-header">
+        <img class="pdf-mini-logo" src="${logoSrc}" alt="TAFE" />
+        <span class="pdf-mini-title">${escPDF(title)}</span>
+      </div>`;
+
+    const fullHeaderHTML = `
+      <div class="pdf-header">
+        <img class="pdf-logo" src="${logoSrc}" alt="TAFE Logo" />
+        <div class="pdf-header-text">
+          <div class="pdf-org">Texas Association of Future Educators</div>
+          <div class="pdf-event-title">${escPDF(title)}</div>
+          <div class="pdf-meta-row">
+            <span class="pdf-meta-chip">Total Points: <strong>${totalMax()}</strong></span>
+            ${timerLabel ? `<span class="pdf-meta-chip">Time Limit: <strong>${timerLabel}</strong></span>` : ''}
+          </div>
+        </div>
+      </div>`;
+
+    function footerHTML(pageNum, totalPages) {
+      return `<div class="pdf-footer">Texas Association of Future Educators &nbsp;\u2022&nbsp; ${escPDF(title)} &nbsp;(Page ${pageNum} of ${totalPages})</div>`;
+    }
+
+    function renderCrit(crit) {
+      const sorted = levelOrder === 'asc'
+        ? [...crit.levels].sort((a, b) => a.pts - b.pts)
+        : [...crit.levels].sort((a, b) => b.pts - a.pts);
+      return `<div class="pdf-crit">
+        <div class="pdf-crit-header">
+          <span class="pdf-crit-name">${escPDF(crit.name || 'Untitled criterion')}</span>
+          <span class="pdf-crit-max">${crit.max} pts max</span>
+        </div>
+        ${crit.description ? `<div class="pdf-crit-desc">${escPDF(crit.description)}</div>` : ''}
+        <div class="pdf-levels">
+          ${sorted.map(lv => {
+            const ptsLabel = lv.mode === 'range' ? `${lv.min}\u2013${lv.pts} pts` : `${lv.pts} pts`;
+            return `<div class="pdf-level">
+              <div class="pdf-level-label">${escPDF(lv.label || '\u2014')}</div>
+              <div class="pdf-level-pts${lv.mode === 'range' ? ' range' : ''}">${ptsLabel}</div>
+              ${lv.text ? `<div class="pdf-level-desc">${escPDF(lv.text)}</div>` : ''}
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }
+
+    // Render all criteria HTML upfront, then measure all at once (single DOM pass)
+    const flatCrits = sections.flatMap(sec => sec.criteria.map(crit => ({ sec, crit })));
+    const critHTMLs = flatCrits.map(({ crit }) => renderCrit(crit));
+    const measuredH = measureCritHeights(critHTMLs);
+
+    function renderPageSections(sectionsList) {
+      return sectionsList.map(({ sec, crits }) => {
+        const smax = sectionMax(sec);
+        return `<div class="pdf-section">
+          <div class="pdf-section-header">
+            <span class="pdf-section-name">${escPDF(sec.name || 'Untitled section')}</span>
+            <span class="pdf-section-pts">${smax} pts</span>
+          </div>
+          ${crits.join('')}
+        </div>`;
+      }).join('');
+    }
+
+    // Paginate at criterion level using measured heights
+    const pages = [];
+    let pageSections = [];
+    let currentSectionCrits = [];
+    let currentSec = null;
+    let usedH = 0;
+    let isFirstPage = true;
+    let critIdx = 0;
+
+    function availH() {
+      return PX_BODY - (isFirstPage ? PX_FULL_HEADER : PX_MINI_HEADER) - PX_FOOTER;
+    }
+
+    function flushPage() {
+      if (currentSec && currentSectionCrits.length) {
+        pageSections.push({ sec: currentSec, crits: [...currentSectionCrits] });
+      }
+      pages.push({ isFirst: isFirstPage, sections: pageSections });
+      pageSections = [];
+      currentSectionCrits = [];
+      currentSec = null;
+      usedH = 0;
+      isFirstPage = false;
+    }
+
+    sections.forEach(sec => {
+      sec.criteria.forEach((crit, ci) => {
+        const ch = measuredH[critIdx] + 4;
+        critIdx++;
+        const needsSecHeader = !currentSec || currentSec.id !== sec.id;
+        const cost = ch + (needsSecHeader ? PX_SEC_HEADER : 0);
+
+        if (usedH > 0 && usedH + cost > availH()) {
+          if (currentSec && currentSectionCrits.length) {
+            pageSections.push({ sec: currentSec, crits: [...currentSectionCrits] });
+            currentSectionCrits = [];
+            currentSec = null;
+          }
+          flushPage();
+        }
+
+        if (!currentSec || currentSec.id !== sec.id) {
+          if (currentSec && currentSectionCrits.length) {
+            pageSections.push({ sec: currentSec, crits: [...currentSectionCrits] });
+            currentSectionCrits = [];
+          }
+          currentSec = sec;
+          usedH += PX_SEC_HEADER;
+        }
+
+        currentSectionCrits.push(critHTMLs[critIdx - 1]);
+        usedH += ch;
+      });
+    });
+
+    if (currentSec && currentSectionCrits.length) {
+      pageSections.push({ sec: currentSec, crits: [...currentSectionCrits] });
+    }
+    if (pageSections.length > 0 || pages.length === 0) {
+      pages.push({ isFirst: isFirstPage, sections: pageSections });
+    }
+
+    const totalPages = pages.length;
+
+    return pages.map((pg, i) => {
+      const pageNum = i + 1;
+      const isLast = i === pages.length - 1;
+      const breakStyle = isLast ? '' : ' style="page-break-after:always;break-after:page"';
+      return `<div class="pdf-page"${breakStyle}>
+        <div class="pdf-page-body">
+          ${pg.isFirst ? fullHeaderHTML : miniHeaderHTML}
+          ${pg.sections.length ? renderPageSections(pg.sections) : '<p style="font-size:8.5pt;color:#9e9890">No sections defined.</p>'}
+        </div>
+        ${footerHTML(pageNum, totalPages)}
+      </div>`;
+    }).join('\n');
+  }
+
+  const PDF_PRINT_CSS = `
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+    body { font-family: 'DM Sans', sans-serif; background: #fff; color: #1a1814; margin: 0; }
+
+    /* Each .pdf-page is one printed page — breaks injected inline per page except last */
+    .pdf-page {
+      padding: 28px 36px 28px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    .pdf-page-body { flex: 1 1 auto; }
+    .pdf-footer { margin-top: auto; padding-top: 9px; border-top: 1px solid #e0e0e0; font-size: 6.5pt; color: #9e9890; text-align: center; }
+
+    /* Full header — page 1 */
+    .pdf-header {
+      display: flex; align-items: center; gap: 14px;
+      padding-bottom: 12px; margin-bottom: 16px;
+      border-bottom: 4px solid #003087;
+    }
+    .pdf-logo { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid #cc0000; flex-shrink: 0; }
+    .pdf-header-text { flex: 1; }
+    .pdf-org { font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: #cc0000; margin-bottom: 3px; }
+    .pdf-event-title { font-size: 18pt; font-weight: 700; letter-spacing: -.02em; color: #003087; line-height: 1.1; }
+    .pdf-meta-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 5px; }
+    .pdf-meta-chip { font-size: 7.5pt; color: #6b6560; }
+    .pdf-meta-chip strong { color: #003087; font-weight: 700; }
+
+    /* Mini header — pages 2+ */
+    .pdf-mini-header {
+      display: flex; align-items: center; gap: 10px;
+      padding-bottom: 8px; margin-bottom: 14px;
+      border-bottom: 3px solid #003087;
+    }
+    .pdf-mini-logo { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1.5px solid #cc0000; flex-shrink: 0; }
+    .pdf-mini-title { font-size: 9pt; font-weight: 700; color: #003087; flex: 1; }
+
+    /* Sections */
+    .pdf-section { margin-bottom: 14px; }
+    .pdf-section-header {
+      background: #003087; border-radius: 4px 4px 0 0;
+      padding: 5px 10px; display: flex; justify-content: space-between; align-items: center;
+      break-after: avoid; page-break-after: avoid;
+    }
+    .pdf-section-name { font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #fff; }
+    .pdf-section-pts { font-size: 7.5pt; font-weight: 700; color: #ffcdd2; }
+
+    /* Criteria */
+    .pdf-crit { border: 1px solid #ccd5e8; border-top: none; padding: 7px 10px 6px; break-inside: avoid; page-break-inside: avoid; }
+    .pdf-crit:last-child { border-radius: 0 0 4px 4px; }
+    .pdf-crit + .pdf-crit { border-top: 1px solid #e8edf6; }
+    .pdf-crit-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
+    .pdf-crit-name { font-size: 8.5pt; font-weight: 700; color: #003087; }
+    .pdf-crit-max { font-size: 7pt; color: #9e9890; font-weight: 500; }
+    .pdf-crit-desc { font-size: 7.5pt; color: #6b6560; margin-bottom: 6px; line-height: 1.35; }
+
+    /* Levels */
+    .pdf-levels { display: flex; gap: 5px; flex-wrap: wrap; }
+    .pdf-level { border: 1px solid #ccd5e8; border-radius: 4px; padding: 4px 7px; min-width: 90px; flex: 1; background: #f4f6fb; }
+    .pdf-level-label { font-size: 7.5pt; font-weight: 700; color: #003087; margin-bottom: 1px; }
+    .pdf-level-pts { font-size: 7.5pt; font-weight: 700; color: #1a1814; margin-bottom: 2px; }
+    .pdf-level-pts.range { color: #cc0000; }
+    .pdf-level-desc { font-size: 7pt; color: #6b6560; line-height: 1.3; }
+
+  `;
+
+  async function exportPDF() {
+    const btn = document.querySelector('[onclick="exportPDF()"]');
+    if (btn) { btn.textContent = 'Preparing…'; btn.disabled = true; }
+
+    const title = $('eventTitle').value.trim() || 'Untitled Event';
+    const timerTotalSec = getTimerSeconds();
+    const timerLabel = timerTotalSec > 0
+      ? (timerMins > 0 ? timerMins + ' min' : '') + (timerSecs > 0 ? (timerMins > 0 ? ' ' : '') + timerSecs + ' sec' : '')
+      : null;
+    const now = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+
+    if (!tafeLogoBase64) tafeLogoBase64 = await fetchLogoBase64(TAFE_LOGO_URL);
+    const logoSrc = tafeLogoBase64 || TAFE_LOGO_URL;
+
+    const pdfHTML = buildPDFPages(logoSrc, title, timerLabel, now);
+    const plainTitle = title;
+    const safeTitle = title.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const escapedTitleJS = title.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const scriptClose = '</' + 'script>';
+    const doc = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>${safeTitle}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>${PDF_PRINT_CSS}</style>
+</head>
+<body>${pdfHTML}
+<script>document.title='${escapedTitleJS}';${scriptClose}
+</body>
+</html>`;
+
+    // Create a completely hidden iframe — never visible, auto-removes after print
+    const frame = document.createElement('iframe');
+    frame.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;border:none;';
+    document.body.appendChild(frame);
+
+    frame.onload = () => {
+      setTimeout(() => {
+        if (btn) { btn.textContent = '⬇ Save As PDF'; btn.disabled = false; }
+        try {
+          frame.contentWindow.focus();
+          frame.contentWindow.print();
+        } catch(e) {
+          showToast('Could not open print dialog. Try allowing pop-ups.');
+        }
+        setTimeout(() => {
+          if (frame.parentNode) frame.parentNode.removeChild(frame);
+        }, 60000);
+      }, 600);
+    };
+
+    frame.contentDocument.open();
+    frame.contentDocument.write(doc);
+    frame.contentDocument.close();
+  }
+
+  function escPDF(s) {
+    return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  /* ── DARK MODE ── */
+
+  $('darkToggle').addEventListener('click', () => {
+    const isDark = document.documentElement.classList.toggle('dark');
+    $('toggleTrack').classList.toggle('on', isDark);
+    $('sunIcon').classList.toggle('active', !isDark);
+    $('moonIcon').classList.toggle('active', isDark);
+  });
+
+  initDefault();
+</script>
+</body>
+</html>
